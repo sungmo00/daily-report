@@ -1,0 +1,2 @@
+cd daily_report
+npx --no -- commitlint --edit "$1"

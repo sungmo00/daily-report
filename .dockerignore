@@ -1,0 +1,11 @@
+.git
+.github
+.husky
+.next
+node_modules
+coverage
+doc
+*.md
+*.test.ts
+*.spec.ts
+src/test
