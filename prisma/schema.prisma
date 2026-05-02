@@ -57,6 +57,7 @@ model SalesRep {
   role         Role     @default(rep)
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   customers     SalesRepCustomer[]
   dailyReports  DailyReport[]
@@ -68,7 +69,7 @@ model SalesRep {
 
 model Customer {
   id           Int           @id @default(autoincrement())
-  companyName  String        @map("company_name")
+  companyName  String        @unique @map("company_name")
   contactName  String        @map("contact_name")
   contactPhone String        @map("contact_phone")
   contactEmail String?       @map("contact_email")
@@ -77,6 +78,7 @@ model Customer {
   grade        CustomerGrade
   isActive     Boolean       @default(true) @map("is_active")
   createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   salesReps    SalesRepCustomer[]
   visitRecords VisitRecord[]
@@ -88,7 +90,7 @@ model SalesRepCustomer {
   id           Int      @id @default(autoincrement())
   salesRepId   Int      @map("sales_rep_id")
   customerId   Int      @map("customer_id")
-  assignedDate DateTime @default(now()) @map("assigned_date")
+  assignedDate DateTime @default(now()) @map("assigned_date") @db.Date
 
   salesRep SalesRep @relation(fields: [salesRepId], references: [id])
   customer Customer @relation(fields: [customerId], references: [id])
@@ -132,7 +134,7 @@ model VisitRecord {
   content       String
   result        String?
   nextAction    String?   @map("next_action")
-  visitedAt     String?   @map("visited_at")
+  visitedAt     String?   @map("visited_at") // "HH:MM" 형식의 시각 문자열
   createdAt     DateTime  @default(now()) @map("created_at")
 
   dailyReport DailyReport @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
@@ -164,15 +166,15 @@ model Comment {
 model Notification {
   id            Int              @id @default(autoincrement())
   recipientId   Int              @map("recipient_id")
-  dailyReportId Int              @map("daily_report_id")
+  dailyReportId Int?             @map("daily_report_id")
   commentId     Int?             @map("comment_id")
   type          NotificationType
   message       String
   isRead        Boolean          @default(false) @map("is_read")
   createdAt     DateTime         @default(now()) @map("created_at")
 
-  recipient   SalesRep    @relation("NotificationRecipient", fields: [recipientId], references: [id])
-  dailyReport DailyReport @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
+  recipient   SalesRep     @relation("NotificationRecipient", fields: [recipientId], references: [id])
+  dailyReport DailyReport? @relation(fields: [dailyReportId], references: [id], onDelete: SetNull)
   comment     Comment?    @relation(fields: [commentId], references: [id], onDelete: SetNull)
 
   @@index([recipientId])

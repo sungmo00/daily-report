@@ -99,7 +99,7 @@ async function main() {
   // ─── Customers ─────────────────────────────────────────────────────────────
   const customers = await Promise.all([
     prisma.customer.upsert({
-      where: { id: 1 },
+      where: { companyName: "(주)ABC테크" },
       update: {},
       create: {
         companyName: "(주)ABC테크",
@@ -113,7 +113,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 2 },
+      where: { companyName: "XYZ상사" },
       update: {},
       create: {
         companyName: "XYZ상사",
@@ -127,7 +127,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 3 },
+      where: { companyName: "(주)미래제조" },
       update: {},
       create: {
         companyName: "(주)미래제조",
@@ -141,7 +141,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 4 },
+      where: { companyName: "글로벌트레이딩" },
       update: {},
       create: {
         companyName: "글로벌트레이딩",
@@ -155,7 +155,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 5 },
+      where: { companyName: "(주)한국금융" },
       update: {},
       create: {
         companyName: "(주)한국금융",
@@ -169,7 +169,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 6 },
+      where: { companyName: "스마트물류" },
       update: {},
       create: {
         companyName: "스마트물류",
@@ -183,7 +183,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 7 },
+      where: { companyName: "(주)디지털미디어" },
       update: {},
       create: {
         companyName: "(주)디지털미디어",
@@ -197,7 +197,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 8 },
+      where: { companyName: "에코에너지" },
       update: {},
       create: {
         companyName: "에코에너지",
@@ -211,7 +211,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 9 },
+      where: { companyName: "(주)바이오헬스" },
       update: {},
       create: {
         companyName: "(주)바이오헬스",
@@ -225,7 +225,7 @@ async function main() {
       },
     }),
     prisma.customer.upsert({
-      where: { id: 10 },
+      where: { companyName: "푸드서비스" },
       update: {},
       create: {
         companyName: "푸드서비스",
@@ -347,6 +347,9 @@ async function main() {
   console.log("DailyReports created:", [report1, report2, report3, report4, report5].length);
 
   // ─── Visit Records ──────────────────────────────────────────────────────────
+  await prisma.visitRecord.deleteMany({
+    where: { dailyReportId: { in: [report1.id, report2.id, report3.id, report4.id] } },
+  });
   await prisma.visitRecord.createMany({
     data: [
       {
@@ -420,12 +423,14 @@ async function main() {
         visitedAt: "10:00",
       },
     ],
-    skipDuplicates: true,
   });
 
   console.log("VisitRecords created");
 
   // ─── Comments ───────────────────────────────────────────────────────────────
+  await prisma.comment.deleteMany({
+    where: { authorId: manager.id },
+  });
   const comment1 = await prisma.comment.create({
     data: {
       dailyReportId: report1.id,
@@ -456,6 +461,9 @@ async function main() {
   console.log("Comments created:", [comment1, comment2, comment3].length);
 
   // ─── Notifications ──────────────────────────────────────────────────────────
+  await prisma.notification.deleteMany({
+    where: { recipientId: { in: [rep1.id, rep2.id] } },
+  });
   await prisma.notification.createMany({
     data: [
       {

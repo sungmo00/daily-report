@@ -27,6 +27,7 @@ CREATE TABLE "sales_rep" (
     "role" "Role" NOT NULL DEFAULT 'rep',
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "sales_rep_pkey" PRIMARY KEY ("id")
 );
@@ -43,6 +44,7 @@ CREATE TABLE "customer" (
     "grade" "CustomerGrade" NOT NULL,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "customer_pkey" PRIMARY KEY ("id")
 );
@@ -52,7 +54,7 @@ CREATE TABLE "sales_rep_customer" (
     "id" SERIAL NOT NULL,
     "sales_rep_id" INTEGER NOT NULL,
     "customer_id" INTEGER NOT NULL,
-    "assigned_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "assigned_date" DATE NOT NULL DEFAULT CURRENT_DATE,
 
     CONSTRAINT "sales_rep_customer_pkey" PRIMARY KEY ("id")
 );
@@ -106,7 +108,7 @@ CREATE TABLE "comment" (
 CREATE TABLE "notification" (
     "id" SERIAL NOT NULL,
     "recipient_id" INTEGER NOT NULL,
-    "daily_report_id" INTEGER NOT NULL,
+    "daily_report_id" INTEGER,
     "comment_id" INTEGER,
     "type" "NotificationType" NOT NULL,
     "message" TEXT NOT NULL,
@@ -118,6 +120,9 @@ CREATE TABLE "notification" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "sales_rep_email_key" ON "sales_rep"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "customer_company_name_key" ON "customer"("company_name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "sales_rep_customer_sales_rep_id_customer_id_key" ON "sales_rep_customer"("sales_rep_id", "customer_id");
@@ -156,7 +161,7 @@ CREATE INDEX "comment_author_id_idx" ON "comment"("author_id");
 CREATE INDEX "notification_recipient_id_idx" ON "notification"("recipient_id");
 
 -- CreateIndex
-CREATE INDEX "notification_daily_report_id_idx" ON "notification"("daily_report_id");
+CREATE INDEX "notification_daily_report_id_idx" ON "notification"("daily_report_id") WHERE "daily_report_id" IS NOT NULL;
 
 -- CreateIndex
 CREATE INDEX "notification_comment_id_idx" ON "notification"("comment_id");
@@ -189,7 +194,7 @@ ALTER TABLE "comment" ADD CONSTRAINT "comment_author_id_fkey" FOREIGN KEY ("auth
 ALTER TABLE "notification" ADD CONSTRAINT "notification_recipient_id_fkey" FOREIGN KEY ("recipient_id") REFERENCES "sales_rep"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notification" ADD CONSTRAINT "notification_daily_report_id_fkey" FOREIGN KEY ("daily_report_id") REFERENCES "daily_report"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "notification" ADD CONSTRAINT "notification_daily_report_id_fkey" FOREIGN KEY ("daily_report_id") REFERENCES "daily_report"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "notification" ADD CONSTRAINT "notification_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "comment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
