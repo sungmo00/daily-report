@@ -27,5 +27,5 @@ export function paginatedResponse<T>(
   data: PaginatedData<T>,
   status = 200,
 ): NextResponse {
-  return NextResponse.json({ success: true, data }, { status });
+  return successResponse(data, status);
 }

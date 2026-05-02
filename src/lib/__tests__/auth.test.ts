@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
+import type { Role } from "@/types";
 import { signToken, verifyToken, hashPassword, comparePassword } from "../auth";
 
 describe("auth utilities", () => {
   describe("JWT", () => {
     it("signToken 으로 발급한 토큰을 verifyToken 으로 검증한다", () => {
-      const payload = { sub: 1, role: "rep" };
+      const payload = { sub: 1, role: "rep" as Role };
       const token = signToken(payload);
       const decoded = verifyToken(token);
 

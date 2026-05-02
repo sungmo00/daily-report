@@ -1,13 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
-const PUBLIC_PATHS = ["/api/v1/auth/login", "/login"];
+const PUBLIC_PATHS = new Set(["/api/v1/auth/login", "/login"]);
 
 export function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
-  // Allow public paths
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  // Allow exact public paths
+  if (PUBLIC_PATHS.has(pathname)) {
     return NextResponse.next();
   }
 
