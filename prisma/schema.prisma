@@ -1,0 +1,18 @@
+// 전체 모델 정의는 Issue #2에서 완성됩니다.
+// 엔티티: SalesRep, Customer, SalesRepCustomer,
+//         DailyReport, VisitRecord, Comment, Notification
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Prisma 클라이언트 생성을 위한 임시 플레이스홀더 모델
+// Issue #2에서 실제 스키마로 교체됩니다
+model Placeholder {
+  id Int @id @default(autoincrement())
+}

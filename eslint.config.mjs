@@ -11,7 +11,6 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-  ...compat.extends("plugin:tailwindcss/recommended"),
   {
     rules: {
       // TypeScript
@@ -23,24 +22,22 @@ const eslintConfig = [
       "react/self-closing-comp": "error",
       "react/jsx-curly-brace-presence": ["error", { props: "never", children: "never" }],
 
-      // Tailwind
-      "tailwindcss/classnames-order": "warn",
-      "tailwindcss/no-contradicting-classnames": "error",
-
       // 일반
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "prefer-const": "error",
-      "no-var": "error"
+      "no-var": "error",
     },
   },
   {
     ignores: [
       ".next/**",
       "node_modules/**",
+      "src/generated/**",
       "dist/**",
       "coverage/**",
       "*.config.mjs",
-      "*.config.ts"
+      "*.config.ts",
+      "prisma.config.ts",
     ],
   },
 ];

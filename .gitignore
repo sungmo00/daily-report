@@ -1,0 +1,15 @@
+node_modules/
+.next/
+dist/
+coverage/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Prisma generated
+/src/generated/
+
+# OS
+.DS_Store
