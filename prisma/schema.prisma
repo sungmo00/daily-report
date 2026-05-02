@@ -1,7 +1,3 @@
-// 전체 모델 정의는 Issue #2에서 완성됩니다.
-// 엔티티: SalesRep, Customer, SalesRepCustomer,
-//         DailyReport, VisitRecord, Comment, Notification
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -11,8 +7,177 @@ datasource db {
   provider = "postgresql"
 }
 
-// Prisma 클라이언트 생성을 위한 임시 플레이스홀더 모델
-// Issue #2에서 실제 스키마로 교체됩니다
-model Placeholder {
-  id Int @id @default(autoincrement())
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  rep
+  manager
+  admin
+}
+
+enum CustomerGrade {
+  A
+  B
+  C
+}
+
+enum ReportStatus {
+  draft
+  submitted
+  reviewed
+}
+
+enum VisitType {
+  visit
+  call
+  video
+  email
+}
+
+enum TargetSection {
+  problem
+  plan
+}
+
+enum NotificationType {
+  comment
+  reminder
+  reviewed
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model SalesRep {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  phone        String?
+  territory    String?
+  role         Role     @default(rep)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  customers     SalesRepCustomer[]
+  dailyReports  DailyReport[]
+  comments      Comment[]
+  notifications Notification[]    @relation("NotificationRecipient")
+
+  @@map("sales_rep")
+}
+
+model Customer {
+  id           Int           @id @default(autoincrement())
+  companyName  String        @map("company_name")
+  contactName  String        @map("contact_name")
+  contactPhone String        @map("contact_phone")
+  contactEmail String?       @map("contact_email")
+  address      String?
+  industry     String?
+  grade        CustomerGrade
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  salesReps    SalesRepCustomer[]
+  visitRecords VisitRecord[]
+
+  @@map("customer")
+}
+
+model SalesRepCustomer {
+  id           Int      @id @default(autoincrement())
+  salesRepId   Int      @map("sales_rep_id")
+  customerId   Int      @map("customer_id")
+  assignedDate DateTime @default(now()) @map("assigned_date")
+
+  salesRep SalesRep @relation(fields: [salesRepId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@unique([salesRepId, customerId])
+  @@index([salesRepId])
+  @@index([customerId])
+  @@map("sales_rep_customer")
+}
+
+model DailyReport {
+  id          Int          @id @default(autoincrement())
+  salesRepId  Int          @map("sales_rep_id")
+  reportDate  DateTime     @map("report_date") @db.Date
+  problem     String?
+  plan        String?
+  status      ReportStatus @default(draft)
+  submittedAt DateTime?    @map("submitted_at")
+  reviewedAt  DateTime?    @map("reviewed_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  salesRep      SalesRep       @relation(fields: [salesRepId], references: [id])
+  visitRecords  VisitRecord[]
+  comments      Comment[]
+  notifications Notification[]
+
+  @@unique([salesRepId, reportDate])
+  @@index([salesRepId])
+  @@index([reportDate])
+  @@index([status])
+  @@map("daily_report")
+}
+
+model VisitRecord {
+  id            Int       @id @default(autoincrement())
+  dailyReportId Int       @map("daily_report_id")
+  customerId    Int       @map("customer_id")
+  visitType     VisitType @map("visit_type")
+  purpose       String
+  content       String
+  result        String?
+  nextAction    String?   @map("next_action")
+  visitedAt     String?   @map("visited_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  dailyReport DailyReport @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
+  customer    Customer    @relation(fields: [customerId], references: [id])
+
+  @@index([dailyReportId])
+  @@index([customerId])
+  @@map("visit_record")
+}
+
+model Comment {
+  id            Int           @id @default(autoincrement())
+  dailyReportId Int           @map("daily_report_id")
+  authorId      Int           @map("author_id")
+  targetSection TargetSection @map("target_section")
+  content       String
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  dailyReport   DailyReport    @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
+  author        SalesRep       @relation(fields: [authorId], references: [id])
+  notifications Notification[]
+
+  @@index([dailyReportId])
+  @@index([authorId])
+  @@map("comment")
+}
+
+model Notification {
+  id            Int              @id @default(autoincrement())
+  recipientId   Int              @map("recipient_id")
+  dailyReportId Int              @map("daily_report_id")
+  commentId     Int?             @map("comment_id")
+  type          NotificationType
+  message       String
+  isRead        Boolean          @default(false) @map("is_read")
+  createdAt     DateTime         @default(now()) @map("created_at")
+
+  recipient   SalesRep    @relation("NotificationRecipient", fields: [recipientId], references: [id])
+  dailyReport DailyReport @relation(fields: [dailyReportId], references: [id], onDelete: Cascade)
+  comment     Comment?    @relation(fields: [commentId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId])
+  @@index([dailyReportId])
+  @@index([commentId])
+  @@index([isRead])
+  @@map("notification")
 }
