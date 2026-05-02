@@ -15,6 +15,9 @@
     "test:coverage": "vitest run --coverage",
     "prepare": "cd .. && husky daily_report/.husky"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
       "eslint --fix",
@@ -65,11 +68,12 @@
     "eslint": "^9.26.0",
     "eslint-config-next": "^15.3.1",
     "eslint-plugin-tailwindcss": "^3.18.0",
-    "prisma": "^7.8.0",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^16.4.0",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4.1.5",
+    "tsx": "^4.21.0",
     "typescript": "^5.8.3",
     "vitest": "^4.1.5"
   }
