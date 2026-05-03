@@ -58,8 +58,16 @@ export function middleware(request: NextRequest): NextResponse {
   }
 
   // ── Page route protection ─────────────────────────────────────────────────
-  const token = request.cookies.get("auth-token")?.value ?? null;
-  const isAuthenticated = !!token;
+  let isAuthenticated = false;
+  const rawToken = request.cookies.get("auth-token")?.value;
+  if (rawToken) {
+    try {
+      verifyToken(rawToken);
+      isAuthenticated = true;
+    } catch {
+      // Invalid or expired token — treat as unauthenticated
+    }
+  }
 
   // Authenticated user accessing /login → redirect to /dashboard
   if (PUBLIC_PAGE_PATHS.has(pathname) && isAuthenticated) {
@@ -74,7 +82,11 @@ export function middleware(request: NextRequest): NextResponse {
   if (isProtected && !isAuthenticated) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    if (rawToken) {
+      response.cookies.delete("auth-token");
+    }
+    return response;
   }
 
   return NextResponse.next();

@@ -24,10 +24,13 @@ const loginSchema = z.object({
     .string()
     .min(1, "이메일을 입력해 주세요.")
     .email("올바른 이메일 형식이 아닙니다."),
-  password: z
-    .string()
-    .min(1, "비밀번호를 입력해 주세요.")
-    .min(8, "비밀번호는 최소 8자 이상이어야 합니다."),
+  password: z.string().superRefine((val, ctx) => {
+    if (val.length === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "비밀번호를 입력해 주세요." });
+    } else if (val.length < 8) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "비밀번호는 최소 8자 이상이어야 합니다." });
+    }
+  }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;

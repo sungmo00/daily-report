@@ -21,7 +21,7 @@ export async function loginAction(
   password: string,
 ): Promise<LoginActionResult> {
   const baseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    process.env.API_BASE_URL ??
     `http://localhost:${process.env.PORT ?? 3000}`;
 
   let data: LoginResponseData;
@@ -33,6 +33,16 @@ export async function loginAction(
       body: JSON.stringify({ email, password }),
       cache: "no-store",
     });
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message:
+          res.status === 401
+            ? "이메일 또는 비밀번호가 올바르지 않습니다."
+            : "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+      };
+    }
 
     const json: ApiResponse<LoginResponseData> = await res.json();
 
