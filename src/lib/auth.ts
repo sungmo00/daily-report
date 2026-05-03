@@ -10,6 +10,7 @@ const JWT_EXPIRES_IN = parseInt(process.env.JWT_EXPIRES_IN ?? "86400", 10);
 
 export interface JwtPayload {
   sub: number;
+  email: string;
   role: Role;
   iat?: number;
   exp?: number;
@@ -17,6 +18,7 @@ export interface JwtPayload {
 
 const JwtPayloadSchema = z.object({
   sub: z.number().int(),
+  email: z.string().email(),
   role: z.enum(["rep", "manager", "admin"]),
   iat: z.number().optional(),
   exp: z.number().optional(),

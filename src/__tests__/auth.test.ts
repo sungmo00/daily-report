@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest, NextResponse } from "next/server";
 import type { Role } from "@/types";
 import { signToken, verifyToken, hashPassword, comparePassword } from "@/lib/auth";
+import { middleware } from "@/middleware";
+import { requireRole } from "@/lib/rbac";
 
 // ---------------------------------------------------------------------------
 // Prisma mock — must be defined before importing route handlers
@@ -37,11 +40,12 @@ function makeRequest(body: unknown, headers: Record<string, string> = {}): Reque
 
 describe("JWT utilities", () => {
   it("signToken 으로 발급한 토큰을 verifyToken 으로 검증한다", () => {
-    const payload = { sub: 1, role: "rep" as Role };
+    const payload = { sub: 1, email: "hong@example.com", role: "rep" as Role };
     const token = signToken(payload);
     const decoded = verifyToken(token);
 
     expect(decoded.sub).toBe(1);
+    expect(decoded.email).toBe("hong@example.com");
     expect(decoded.role).toBe("rep");
   });
 
@@ -54,7 +58,7 @@ describe("JWT utilities", () => {
     // We directly sign a token with a negative expiresIn via the underlying library
     const jwt = await import("jsonwebtoken");
     const expiredToken = jwt.default.sign(
-      { sub: 1, role: "rep" },
+      { sub: 1, email: "hong@example.com", role: "rep" },
       process.env.JWT_SECRET!,
       { expiresIn: -1 },
     );
@@ -184,5 +188,63 @@ describe("POST /api/v1/auth/logout", () => {
     expect(res.status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.data).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Unit tests: middleware — 인증 보호
+// ---------------------------------------------------------------------------
+
+describe("middleware", () => {
+  it("토큰 없이 보호된 API 호출 시 401 UNAUTHORIZED를 반환한다", async () => {
+    const req = new NextRequest("http://localhost/api/v1/reports");
+    const res = middleware(req);
+
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  it("만료된 토큰으로 보호된 API 호출 시 401 INVALID_TOKEN을 반환한다", async () => {
+    const jwt = await import("jsonwebtoken");
+    const expiredToken = jwt.default.sign(
+      { sub: 1, email: "hong@example.com", role: "rep" },
+      process.env.JWT_SECRET!,
+      { expiresIn: -1 },
+    );
+    const req = new NextRequest("http://localhost/api/v1/reports", {
+      headers: { authorization: `Bearer ${expiredToken}` },
+    });
+    const res = middleware(req);
+
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe("INVALID_TOKEN");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Unit tests: requireRole — 역할 기반 접근 제어
+// ---------------------------------------------------------------------------
+
+describe("requireRole", () => {
+  it("rep 역할로 requireRole('admin') 호출 시 403 FORBIDDEN NextResponse를 반환한다", async () => {
+    const req = new NextRequest("http://localhost/api/v1/test", {
+      headers: {
+        "x-user-id": "1",
+        "x-user-role": "rep",
+      },
+    });
+    const result = requireRole(req, "admin");
+
+    expect(result instanceof NextResponse).toBe(true);
+    if (result instanceof NextResponse) {
+      expect(result.status).toBe(403);
+      const body = await result.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe("FORBIDDEN");
+    }
   });
 });

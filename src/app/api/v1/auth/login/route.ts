@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const token = signToken({ sub: salesRep.id, role: salesRep.role as Role });
+  const token = signToken({ sub: salesRep.id, email: salesRep.email, role: salesRep.role as Role });
 
   return successResponse(
     {
